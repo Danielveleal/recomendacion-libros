@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Cargar datos
-libros = pd.read_excel("dataset_libros_completo100 libros.xlsx", engine="openpyxl")
+libros = pd.read_excel("dataset_libros_completo100 libros_actualizado.xlsx", engine="openpyxl")
 libros["Subject"] = libros["Programa/Carrera"] + " - " + libros["Materias"]
 
 # TF-IDF

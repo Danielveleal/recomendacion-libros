@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Cargar datos
-libros = pd.read_excel("dataset_libros_completo100 libros.xlsx", engine="openpyxl")
+libros = pd.read_excel("dataset_libros_completo100 libros_actualizado.xlsx", engine="openpyxl")
 libros["Subject"] = libros["Programa/Carrera"] + " - " + libros["Materias"]
 
 # TF-IDF
@@ -15,18 +15,28 @@ cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 indices = pd.Series(libros.index, index=libros["Título"]).drop_duplicates()
 
 def recomendar_libros(titulo, n=5):
+    if titulo not in indices:
+        return pd.DataFrame(columns=["Título", "Facultad", "Programa/Carrera", "Materias"])
+
     idx = indices[titulo]
     sim_scores = list(enumerate(cosine_sim[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:n+1]
-    libro_indices = [i[0] for i in sim_scores]
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+
+    # Evitar recomendar el mismo libro
+    libro_indices = [i[0] for i in sim_scores if i[0] != idx][:n]
+
     return libros[["Título", "Facultad", "Programa/Carrera", "Materias"]].iloc[libro_indices]
 
 # Interfaz
+st.set_page_config(page_title="Recomendador de Libros UNAB", layout="centered")
 st.title("📚 Recomendador de Libros UNAB")
 titulo = st.selectbox("Selecciona un libro:", libros["Título"].unique())
 num = st.slider("¿Cuántas recomendaciones deseas?", 1, 10, 5)
 
 if st.button("Recomendar"):
     recomendaciones = recomendar_libros(titulo, n=num)
-    st.write("Libros recomendados:")
-    st.dataframe(recomendaciones)
+    if recomendaciones.empty:
+        st.warning("⚠️ No se encontraron libros similares.")
+    else:
+        st.write("📖 Libros recomendados:")
+        st.dataframe(recomendaciones)
